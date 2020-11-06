@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <title>Google Search</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Shabnam, sans-serif;
+            background: #ddd;
+            direction: rtl;
+        }
+
+        textarea,
+        input {
+            width: 20rem;
+            background: white;
+            border: 1px solid #ebebeb;
+            border-radius: 1rem;
+            padding: 0.5rem;
+            font-size: 15px;
+            font-family: Shabnam, sans-serif;
+            margin-top: 10px;
+        }
+
+        textarea:focus,
+        input:focus {
+            outline: none;
+        }
+
+        button {
+            background: white;
+            border: 1px solid #ebebeb;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            margin-left: 1rem;
+            cursor: pointer;
+            font-size: 15px;
+            font-family: Shabnam;
+        }
+
+        button:focus {
+            outline: none;
+            border: 1px solid #ccc;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        .course-item {
+            width: 80%;
+            border-radius: 1rem;
+            background: #fafafa;
+            border: 1px solid #ccc;
+            padding: 0 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .course-desc {
+            color: #444444;
+            font-size: .8rem;
+        }
+
+        .delete-course {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            color: red;
+            cursor: pointer;
+            font-size: .9rem;
+        }
+    </style>
+</head>
+
+<body onload="loadCourses()">
+    <h1>ساخت دوره جدید</h1>
+    <input id="courseName" type="text" placeholder="نام دوره"> <br><br>
+    <textarea id="courseDesc" placeholder="توضیحات"></textarea> <br><br>
+    <button onclick="newCourseClick()">ثبت دوره</button><br>
+    <h3>لیست دوره های شما</h3>
+
+    <ul id="result">
+        <li>
+            <div class="course-item">
+                <h4>دوره ساخت توییتر</h4>
+                <span class="delete-course">حذف</span>
+                <p class="course-desc">ع و اندازه فونت و ظاهر متن باشد. معمولا طراحان گرافیک برای صفحه‌آرایی، نخست
+                    متن‌های آزمایشی و
+                    بی‌معنی استفاده می‌کنند تا صرفا به مشتری یا صاحب کار خود نشان دهند که صفحه طراحی یا صفحه بندی </p>
+            </div>
+        </li>
+
+    </ul>
+
+    <script>
+        function newCourseClick() {
+            const courseName = $('#courseName').val()
+            const courseDesc = $('#courseDesc').val()
+            const courseId = Math.floor(Math.random() * 1000)
+
+            if (!courseName || !courseDesc) {
+                return alert('آهای کاربر همه مقادیر رو وارد کن')
+            }
+
+            $.post("http://localhost:3000/course", {
+                        "id": courseId,
+                        "title": courseName,
+                        "desc": courseDesc
+                    },
+                    function (data, status) {
+                        console.log(data);
+                    }
+                ).done(function () {
+                    let str = `<li>
+                                    <div class="course-item">
+                                      <h4>${courseName}</h4>
+                                      <span class="delete-course" onclick="deleteCourse(${courseId})">حذف</span>
+                                      <p class="course-desc">${courseDesc}</p>
+                                    </div>
+                                </li>`
+
+                    document.getElementById('result').innerHTML = document.getElementById('result').innerHTML + str
+                })
+                .fail(function (jqxhr, settings, ex) {
+                    console.log('failed, ' + ex);
+                });
+        }
+
+        function loadCourses() {
+            $.get('http://localhost:3000/course',
+                function (data) {
+                    let str = ''
+                    data.forEach(function (item) {
+                        str += `<li>
+                                    <div class="course-item">
+                                      <h4>${item.title}</h4>
+                                      <span class="delete-course" onclick="deleteCourse(${item.id})">حذف</span>
+                                      <p class="course-desc">${item.desc}</p>
+                                    </div>
+                                </li>`
+                    })
+                    $('#result').html(str)
+                })
+        }
+
+        function deleteCourse(id) {
+            $.ajax({
+                    url: `http://localhost:3000/course/${id}`,
+                    method: "DELETE"
+                })
+                .then(function (data) {
+                    loadCourses()
+                })
+                .catch(function (err) {
+                    console.log(err);
+                });
+        }
+    </script>
+</body>
+
+</html>
